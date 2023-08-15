@@ -9,7 +9,5 @@ services:
             - bot/.env
         volumes:
             - "./db:/app/db"
-        depends_on:
-            - redis
         ports:
             - "8080:8080"
