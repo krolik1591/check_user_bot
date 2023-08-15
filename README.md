@@ -1,3 +1,3 @@
-`python -m pip -r requirements.txt`
+`python -m pip install -r requirements.txt`
 
 `python -m bot`

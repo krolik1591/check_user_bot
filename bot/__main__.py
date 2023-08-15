@@ -1,50 +1,61 @@
 import asyncio
 import logging
+from pathlib import Path
 
-from aiogram import Bot, Dispatcher, F
-from aiogram.dispatcher.fsm.storage.memory import MemoryStorage
-from aiogram.dispatcher.fsm.storage.redis import RedisStorage
+from aiocryptopay import AioCryptoPay, Networks
+from aiogram import Bot, Dispatcher, types
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.utils.i18n import I18n, FSMI18nMiddleware
 
-from bot.config_reader import config
-from bot.handlers import default_commands, spin
-from bot.middlewares.throttling import ThrottlingMiddleware
-from bot.ui_commands import set_bot_commands
+from bot.db import first_start
+from bot.handlers import routers
+from bot.utils.config_reader import config
 
 
-async def main():
+async def main(bot):
     logging.basicConfig(level=logging.WARNING)
 
-    bot = Bot(config.bot_token.get_secret_value(), parse_mode="HTML")
+    storage = MemoryStorage()
 
-    # Выбираем нужный сторадж
-    if config.fsm_mode == "redis":
-        storage = RedisStorage.from_url(
-            url=config.redis,
-            connection_kwargs={"decode_responses": True}
-        )
-    else:
-        storage = MemoryStorage()
-
-    # Создание диспетчера
     dp = Dispatcher(storage=storage)
-    # Принудительно настраиваем фильтр на работу только в чатах один-на-один с ботом
-    dp.message.filter(F.chat.type == "private")
 
-    # Регистрация роутеров с хэндлерами
-    dp.include_router(default_commands.router)
-    dp.include_router(spin.router)
+    for router in routers:
+        dp.include_router(router)
 
-    # Регистрация мидлвари для троттлинга
-    dp.message.middleware(ThrottlingMiddleware())
+    # dp.message.middleware(ThrottlingMiddleware())
+    # dp.callback_query.middleware(ThrottlingMiddleware())
 
-    # Установка команд в интерфейсе
-    await set_bot_commands(bot)
+    await set_private_commands(bot)
+    await set_chat_commands(bot)
+
+    await first_start()
 
     try:
+        print("me:", await bot.me())
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     finally:
         await bot.session.close()
 
 
+async def set_chat_commands(bot: Bot):
+    await bot.set_my_commands(commands=[
+        types.BotCommand(command="casino", description="/casino 'number"),
+        types.BotCommand(command="stats", description="Cтатистика"),
+    ], scope=types.BotCommandScopeAllGroupChats())
+
+
+async def set_private_commands(bot: Bot):
+    await bot.set_my_commands(commands=[
+        types.BotCommand(command="my_promos", description="Мої промокоди"),
+        types.BotCommand(command="add_promo", description="Додати промо"),
+        types.BotCommand(command="stats", description="Cтатистика"),
+    ], scope=types.BotCommandScopeAllPrivateChats())
+
+
 if __name__ == '__main__':
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+
+    bot = Bot(config.bot_token.get_secret_value(), parse_mode="HTML")
+    asyncio.run(main(bot))
+    # loop.create_task(main(bot))

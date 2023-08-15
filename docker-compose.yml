@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+    bot:
+        # Универсальный образ для x86/ARM64
+        build: ./bot
+        restart: "always"
+        stop_signal: SIGINT
+        env_file:
+            - bot/.env
+        volumes:
+            - "./db:/app/db"
+        depends_on:
+            - redis
+        ports:
+            - "8080:8080"

@@ -1,5 +1,7 @@
 # Отдельный сборочный образ
 FROM python:3.9-slim-bullseye as compile-image
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt update && apt install -y gcc && rm -rf /var/lib/apt/lists/*
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 COPY requirements.txt .
@@ -11,5 +13,5 @@ FROM python:3.9-slim-bullseye
 COPY --from=compile-image /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
-COPY bot /app/bot
+COPY . /app/bot
 CMD ["python", "-m", "bot"]
