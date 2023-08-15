@@ -1,12 +1,8 @@
 import asyncio
 import logging
-from pathlib import Path
 
-from aiocryptopay import AioCryptoPay, Networks
 from aiogram import Bot, Dispatcher, types
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.fsm.storage.redis import RedisStorage
-from aiogram.utils.i18n import I18n, FSMI18nMiddleware
 
 from bot.db import first_start
 from bot.handlers import routers
