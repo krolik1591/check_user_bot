@@ -37,7 +37,6 @@ async def casino(message: types.Message):
         return
 
     random_num = random.randint(0, 100)
-    user_num = random_num
     if user_num != random_num:
         await message.answer(f"Ви програли, число було {random_num}")
         return
@@ -60,7 +59,7 @@ async def play(message: types.Message):
         emoji = message.dice.emoji
     except AttributeError:
         return
-
+    await message.answer('Тут буде текст')
     if not await db.is_user_exists(message.from_user.id):
         await db.add_new_user(message.from_user.id, message.from_user.username)
 
