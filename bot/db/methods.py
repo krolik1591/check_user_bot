@@ -8,12 +8,30 @@ from bot.db.models import GameLog, Promocodes, User
 
 # users
 
-async def add_new_user(user_id, username=None):
+async def add_new_user(user_id, username):
+    if username is None:
+        username = ' нема юзернейму'
     return await User.create(user_id=user_id, timestamp_registered=time.time(), username=username)
 
 
 async def is_user_exists(user_id):
     return await User.select().where(User.user_id == user_id).exists()
+
+
+async def get_unique_users():
+    user_ids = await User.select(User.user_id).distinct()
+    return [user_id.user_id for user_id in user_ids]
+
+
+async def get_username_by_id(user_id):
+    result = await User.select().where(User.user_id == user_id)
+    return result[0].username
+
+
+async def update_username(user_id, username):
+    if username is None:
+        return
+    return await User.update({User.username: username}).where(User.user_id == user_id)
 
 
 # games
@@ -73,9 +91,8 @@ if __name__ == "__main__":
     async def test():
         # x = await get_user_promos(357108179)
         # x = await add_new_promo_to_user(357108179, ' 152')
-        x = await get_user_stats(357108179)
-        text = f"Забито голів: {sum(1 for char in x['🎯'] if char in '345')}\n"
+        x = await get_username_by_id(357108179)
 
-        print(text, x)
+        print(x)
 
     asyncio.run(test())

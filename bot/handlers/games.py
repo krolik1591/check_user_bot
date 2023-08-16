@@ -1,3 +1,4 @@
+import json
 import random
 from pprint import pprint
 
@@ -69,18 +70,8 @@ async def play(message: types.Message):
 
 @router.message(Command("stats"))
 async def stats(message: types.Message):
-    all_stats = await db.get_user_stats(message.from_user.id)
-
-    bowling_stat = all_stats.get('🎳', '')
-    bowling_point = bowling_stat.count('2') + \
-                  bowling_stat.count('3') * 3 + \
-                  bowling_stat.count('4') * 4 + \
-                  bowling_stat.count('5') * 5 + \
-                  bowling_stat.count('6') * 6
-    football_point = sum(1 for char in all_stats.get('⚽', '') if char in '345')
-    basket_point = sum(1 for char in all_stats.get('🏀', '') if char in '45')
-
-    points_sum = bowling_point + football_point + basket_point
+    await db.update_username(message.from_user.id, message.from_user.username)
+    bowling_point, football_point, basket_point, points_sum, bowling_strike = await get_user_stats(message.from_user.id)
 
     player_lvl = ''
     for point, name in PLAYER_LVLS.items():
@@ -88,11 +79,55 @@ async def stats(message: types.Message):
             player_lvl = name
             break
 
-    text = f"@{message.from_user.username} {message.from_user.id} Твій результат:\n" \
+    username = message.from_user.username if message.from_user.username is not None else \
+        await db.get_username_by_id(message.from_user.id)
+
+    text = f"@{username} {message.from_user.id} Твій результат:\n" \
            f"⚽ Забито голів: {football_point}\n" \
            f"🏀 Закинуто м'ячів: {basket_point}\n" \
            f"🎳 Збито кеглів: {bowling_point}\n" \
-           f"       Страйків: {bowling_stat.count('6')}\n\n" \
+           f"       Страйків: {bowling_strike}\n\n" \
            f"Твій статус гравця: {player_lvl}"
 
     await message.answer(f'Статистика:\n\n{text}')
+
+
+async def get_user_stats(user_id):
+    all_stats = await db.get_user_stats(user_id)
+
+    bowling_stat = all_stats.get('🎳', '')
+    bowling_strike = bowling_stat.count('6')
+    bowling_point = bowling_stat.count('2') + \
+                  bowling_stat.count('3') * 3 + \
+                  bowling_stat.count('4') * 4 + \
+                  bowling_stat.count('5') * 5 + \
+                  bowling_stat.count('6') * 6
+    football_point = sum(1 for char in all_stats.get('⚽', '') if char in '345')
+    basket_point = sum(1 for char in all_stats.get('🏀', '') if char in '45')
+    points_sum = bowling_point + football_point + basket_point
+
+    return bowling_point, football_point, basket_point, points_sum, bowling_strike
+
+
+@router.message(Command("admin_stats"))
+async def admin_stats(message: types.Message):
+    admins = config.admin_ids
+    if str(message.from_user.id) not in admins:
+        await message.answer("Тільки адмін може переглядати статистику!")
+        return
+
+    result = {}
+
+    user_ids = await db.get_unique_users()
+    for user_id in user_ids:
+        _, _, _, points_sum, _ = await get_user_stats(user_id)
+        result[user_id] = points_sum
+
+    sorted_result = dict(sorted(result.items(), key=lambda item: item[1], reverse=True))
+
+    text = ''
+    for index, (user_id, points_sum) in enumerate(sorted_result.items(), start=1):
+        username = await db.get_username_by_id(user_id)
+        text += f"{index}. @{username} (id: {user_id}): {points_sum} поінтів\n"
+
+    await message.answer(f'Адмін статистика:\n\n{text}')

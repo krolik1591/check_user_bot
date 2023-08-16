@@ -46,6 +46,7 @@ async def set_private_commands(bot: Bot):
         types.BotCommand(command="my_promos", description="Мої промокоди"),
         types.BotCommand(command="add_promo", description="Додати промо"),
         types.BotCommand(command="stats", description="Cтатистика"),
+        types.BotCommand(command="admin_stats", description="Адмін статистика"),
     ], scope=types.BotCommandScopeAllPrivateChats())
 
 
