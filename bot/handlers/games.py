@@ -6,6 +6,7 @@ from aiogram.dispatcher.event.bases import SkipHandler
 from aiogram.filters import Command, Text
 from aiogram.fsm.context import FSMContext
 
+from bot.consts.player_lvl import PLAYER_LVLS
 from bot.db import methods as db
 from bot.utils.config_reader import config
 
@@ -71,15 +72,27 @@ async def stats(message: types.Message):
     all_stats = await db.get_user_stats(message.from_user.id)
 
     bowling_stat = all_stats.get('🎳', '')
-    bowling_sum = bowling_stat.count('2') + \
+    bowling_point = bowling_stat.count('2') + \
                   bowling_stat.count('3') * 3 + \
                   bowling_stat.count('4') * 4 + \
                   bowling_stat.count('5') * 5 + \
                   bowling_stat.count('6') * 6
+    football_point = sum(1 for char in all_stats.get('⚽', '') if char in '345')
+    basket_point = sum(1 for char in all_stats.get('🏀', '') if char in '45')
 
-    text = f"⚽ Забито голів: {sum(1 for char in all_stats.get('⚽', '') if char in '345')}\n" \
-           f"🏀 Забито баскетбольних м'ячів: {sum(1 for char in all_stats.get('🏀', '') if char in '45')}\n" \
-           f"🎯 Влучань в яблучко: {sum(1 for char in all_stats.get('🎯', '') if char in '6')}\n" \
-           f"🎳 Збито кеглів: {bowling_sum}\n"
+    points_sum = bowling_point + football_point + basket_point
+
+    player_lvl = ''
+    for point, name in PLAYER_LVLS.items():
+        if points_sum < point:
+            player_lvl = name
+            break
+
+    text = f"@{message.from_user.username} {message.from_user.id} Твій результат:\n" \
+           f"⚽ Забито голів: {football_point}\n" \
+           f"🏀 Закинуто м'ячів: {basket_point}\n" \
+           f"🎳 Збито кеглів: {bowling_point}\n" \
+           f"       Страйків: {bowling_stat.count('6')}\n\n" \
+           f"Твій статус гравця: {player_lvl}"
 
     await message.answer(f'Статистика:\n\n{text}')
