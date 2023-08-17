@@ -126,7 +126,7 @@ async def roll_command(message: types.Message, state: FSMContext):
 
     bot_username = '@' + (await state.bot.me()).username
     game = message.text.removeprefix("/roll_").removesuffix(bot_username)
-
+    print(game)
     game_emoji = GAMES_LIST[game]
     msg = await message.answer_dice(emoji=game_emoji)
     await asyncio.sleep(DELAY_BEFORE_SEND_RESULT)
