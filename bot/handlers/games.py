@@ -98,7 +98,7 @@ async def stats(message: types.Message):
 async def admin_stats(message: types.Message):
     admins = config.admin_ids
     if str(message.from_user.id) not in admins:
-        await message.answer("Тільки адмін може переглядати статистику!")
+        await message.answer("Тільки адмін може переглядати адмін-статистику!")
         return
 
     result = {}
@@ -113,7 +113,8 @@ async def admin_stats(message: types.Message):
     text = ''
     for index, (user_id, points_sum) in enumerate(sorted_result.items(), start=1):
         username = await db.get_username_by_id(user_id)
-        text += f"{index}. @{username} (id: {user_id}): {points_sum} поінтів\n"
+        user_link = f'<a href="tg://user?id={user_id}">{user_id}</a>'
+        text += f"{index}. @{username} (id: {user_link}): {points_sum} поінтів\n"
 
     await message.answer(f'Адмін статистика:\n\n{text}')
 
@@ -163,6 +164,8 @@ async def games(message: types.Message):
         [InlineKeyboardButton(text='⚽', callback_data="roll_football"),
          InlineKeyboardButton(text='🎳', callback_data="roll_bowling"),
          InlineKeyboardButton(text='🎰', callback_data="roll_casino")],
+        [InlineKeyboardButton(text='id', url=f"tg://user?id={message.from_user.id}")],
+
     ])
 
     await message.answer(text, reply_markup=kb)
