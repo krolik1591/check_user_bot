@@ -84,7 +84,8 @@ async def stats(message: types.Message):
     username = message.from_user.username if message.from_user.username is not None else \
         await db.get_username_by_id(message.from_user.id)
 
-    text = f"@{username} {message.from_user.id} Твій результат:\n" \
+    user_link = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a>'
+    text = f"{user_link} Твій результат:\n" \
            f"⚽ Забито голів: {football_point}\n" \
            f"🏀 Закинуто м'ячів: {basket_point}\n" \
            f"🎳 Збито кеглів: {bowling_point}\n" \
