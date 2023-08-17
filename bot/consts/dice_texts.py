@@ -1,6 +1,11 @@
+from bot.consts.casino_check import get_casino_text
+
+
 def get_dice_text(emoji, dice_value):
+    if emoji == '🎰':
+        return get_casino_text(dice_value)
+
     GAMES_TEXTS = {
-        '🎰': 'Hui',
         '🎳': BOWLING_TEXTS,
         '🏀': BASKET_TEXTS,
         '⚽': FOOTBALL_TEXTS,
