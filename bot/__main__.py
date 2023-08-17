@@ -37,7 +37,12 @@ async def main(bot):
 async def set_chat_commands(bot: Bot):
     await bot.set_my_commands(commands=[
         types.BotCommand(command="casino", description="/casino 'number"),
-        types.BotCommand(command="stats", description="Cтатистика"),
+        types.BotCommand(command="roll_cube", description="Кубик"),
+        types.BotCommand(command="roll_darts", description="Дартс"),
+        types.BotCommand(command="roll_basket", description="Баскет"),
+        types.BotCommand(command="roll_football", description="Футбол"),
+        types.BotCommand(command="roll_casino", description="Казино"),
+        types.BotCommand(command="roll_bowling", description="Боулінг"),
     ], scope=types.BotCommandScopeAllGroupChats())
 
 

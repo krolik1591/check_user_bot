@@ -1,3 +1,4 @@
+import asyncio
 import json
 import random
 from pprint import pprint
@@ -7,7 +8,8 @@ from aiogram.dispatcher.event.bases import SkipHandler
 from aiogram.filters import Command, Text
 from aiogram.fsm.context import FSMContext
 
-from bot.consts.player_lvl import PLAYER_LVLS
+from bot.consts.dice_texts import get_dice_text
+from bot.consts.const import GAMES_LIST, PLAYER_LVLS
 from bot.db import methods as db
 from bot.utils.config_reader import config
 
@@ -131,3 +133,16 @@ async def admin_stats(message: types.Message):
         text += f"{index}. @{username} (id: {user_id}): {points_sum} поінтів\n"
 
     await message.answer(f'Адмін статистика:\n\n{text}')
+
+
+@router.message(Text(startswith="/roll_"))
+async def roll(message: types.Message, state: FSMContext):
+    bot_username = '@' + (await state.bot.me()).username
+    game = message.text.removeprefix("/roll_").removesuffix(bot_username)
+
+    game_emoji = GAMES_LIST[game]
+    msg = await message.answer_dice(emoji=game_emoji)
+    await asyncio.sleep(3.5)
+
+    text = get_dice_text(game_emoji, msg.dice.value)
+    await message.answer(text)
