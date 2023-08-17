@@ -126,7 +126,7 @@ async def roll_command(message: types.Message, state: FSMContext):
 
     bot_username = '@' + (await state.bot.me()).username
     game = message.text.removeprefix("/roll_").removesuffix(bot_username)
-    print(game)
+
     game_emoji = GAMES_LIST[game]
     msg = await message.answer_dice(emoji=game_emoji)
     await asyncio.sleep(DELAY_BEFORE_SEND_RESULT)
@@ -165,7 +165,6 @@ async def games(message: types.Message):
         [InlineKeyboardButton(text='⚽', callback_data="roll_football"),
          InlineKeyboardButton(text='🎳', callback_data="roll_bowling"),
          InlineKeyboardButton(text='🎰', callback_data="roll_casino")],
-        [InlineKeyboardButton(text='id', url=f"tg://user?id={message.from_user.id}")],
 
     ])
 
