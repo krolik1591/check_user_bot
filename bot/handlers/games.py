@@ -7,9 +7,10 @@ from aiogram import F, Router, types
 from aiogram.dispatcher.event.bases import SkipHandler
 from aiogram.filters import Command, Text
 from aiogram.fsm.context import FSMContext
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from bot.consts.dice_texts import get_dice_text
-from bot.consts.const import GAMES_LIST, PLAYER_LVLS
+from bot.consts.const import DELAY_BEFORE_SEND_RESULT, GAMES_LIST, PLAYER_LVLS
 from bot.db import methods as db
 from bot.utils.config_reader import config
 
@@ -118,18 +119,53 @@ async def admin_stats(message: types.Message):
 
 
 @router.message(Text(startswith="/roll_"))
-async def roll(message: types.Message, state: FSMContext):
+async def roll_command(message: types.Message, state: FSMContext):
+    await add_user_to_db(message.from_user.id, message.from_user.username)
+
     bot_username = '@' + (await state.bot.me()).username
     game = message.text.removeprefix("/roll_").removesuffix(bot_username)
 
     game_emoji = GAMES_LIST[game]
     msg = await message.answer_dice(emoji=game_emoji)
-    await asyncio.sleep(3)
+    await asyncio.sleep(DELAY_BEFORE_SEND_RESULT)
 
     await db.add_game_result(message.from_user.id, game_emoji, msg.dice.value)
 
     text = get_dice_text(game_emoji, msg.dice.value)
     await message.answer(text)
+
+
+@router.callback_query(Text(startswith="roll_"))
+async def roll_btn(call: types.CallbackQuery, state: FSMContext):
+    await call.answer()
+
+    await add_user_to_db(call.from_user.id, call.from_user.username)
+
+    game = call.data.removeprefix("roll_")
+
+    game_emoji = GAMES_LIST[game]
+    msg = await call.message.answer_dice(emoji=game_emoji)
+    await asyncio.sleep(DELAY_BEFORE_SEND_RESULT)
+
+    await db.add_game_result(call.from_user.id, game_emoji, msg.dice.value)
+
+    text = get_dice_text(game_emoji, msg.dice.value)
+    await call.message.answer(text)
+
+
+@router.message(Command("games"))
+async def games(message: types.Message):
+    text = 'Список доступних ігор:'
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text='🎲', callback_data="roll_cube"),
+         InlineKeyboardButton(text='🎯', callback_data="roll_darts"),
+         InlineKeyboardButton(text='🏀', callback_data="roll_basket")],
+        [InlineKeyboardButton(text='⚽', callback_data="roll_football"),
+         InlineKeyboardButton(text='🎳', callback_data="roll_bowling"),
+         InlineKeyboardButton(text='🎰', callback_data="roll_casino")],
+    ])
+
+    await message.answer(text, reply_markup=kb)
 
 
 async def get_user_stats(user_id):
@@ -138,10 +174,10 @@ async def get_user_stats(user_id):
     bowling_stat = all_stats.get('🎳', '')
     bowling_strike = bowling_stat.count('6')
     bowling_point = bowling_stat.count('2') + \
-                  bowling_stat.count('3') * 3 + \
-                  bowling_stat.count('4') * 4 + \
-                  bowling_stat.count('5') * 5 + \
-                  bowling_stat.count('6') * 6
+                    bowling_stat.count('3') * 3 + \
+                    bowling_stat.count('4') * 4 + \
+                    bowling_stat.count('5') * 5 + \
+                    bowling_stat.count('6') * 6
     football_point = sum(1 for char in all_stats.get('⚽', '') if char in '345')
     basket_point = sum(1 for char in all_stats.get('🏀', '') if char in '45')
     points_sum = bowling_point + football_point + basket_point
