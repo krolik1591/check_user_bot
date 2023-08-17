@@ -1,14 +1,13 @@
 def get_dice_text(emoji, dice_value):
-    print(emoji, dice_value)
     GAMES_TEXTS = {
         '🎰': 'Hui',
-        '🎳': BOWLING_TEXTS[dice_value],
-        '🏀': BASKET_TEXTS[dice_value],
-        '⚽': FOOTBALL_TEXTS[dice_value],
-        '🎲': CUBE_TEXTS[dice_value],
-        '🎯': DARTS_TEXTS[dice_value],
+        '🎳': BOWLING_TEXTS,
+        '🏀': BASKET_TEXTS,
+        '⚽': FOOTBALL_TEXTS,
+        '🎲': CUBE_TEXTS,
+        '🎯': DARTS_TEXTS,
     }
-    return GAMES_TEXTS[emoji]
+    return GAMES_TEXTS[emoji][dice_value]
 
 
 BASKET_TEXTS = {
