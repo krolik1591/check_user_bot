@@ -3,9 +3,6 @@ import json
 from aiogram import F, Router, types
 from aiogram.filters import Command, Text
 
-from bot.db.methods import create_new_promo, get_user_promos, is_promo_in_db
-from bot.utils.config_reader import config
-
 router = Router()
 
 

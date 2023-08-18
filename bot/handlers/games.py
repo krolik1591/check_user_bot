@@ -9,11 +9,6 @@ from aiogram.filters import Command, Text
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from bot.consts.dice_texts import get_dice_text
-from bot.consts.const import DELAY_BEFORE_SEND_RESULT, GAMES_LIST, PLAYER_LVLS
-from bot.db import methods as db
-from bot.utils.config_reader import config
-
 router = Router()
 
 
@@ -186,8 +181,3 @@ async def get_user_stats(user_id):
     points_sum = bowling_point + football_point + basket_point
 
     return bowling_point, football_point, basket_point, points_sum, bowling_strike
-
-
-async def add_user_to_db(user_id, username):
-    if not await db.is_user_exists(user_id):
-        await db.add_new_user(user_id, username)
