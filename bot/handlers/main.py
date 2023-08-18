@@ -40,12 +40,6 @@ async def on_user_join(message: types.ChatMemberUpdated, state: FSMContext):
 
     question, answer = make_question()
     image_bytes = make_image(question, TIME)
-    # image_io = io.BytesIO(image_bytes)
-    # img = Image.open(image_io)
-    # # Створюємо тимчасовий файл
-    # with tempfile.NamedTemporaryFile(suffix=".png") as temp_file:
-    #     img.save(temp_file, format="PNG")
-    #     temp_file.seek(0)
 
     bot_message = await state.bot.send_photo(
         message.chat.id,
