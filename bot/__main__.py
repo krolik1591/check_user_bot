@@ -1,10 +1,9 @@
 import asyncio
 import logging
 
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from bot import main_handler
 from bot.handlers import routers
 
 
@@ -17,7 +16,6 @@ async def main(bot):
 
     for router in routers:
         dp.include_router(router)
-    dp.include_router(main_handler.router)
 
     try:
         print("me:", await bot.me())

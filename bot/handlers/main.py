@@ -1,19 +1,14 @@
 import asyncio
-import json
 import random
-from pprint import pprint
 
 from aiogram import F, Router, types
-from aiogram.dispatcher.event.bases import SkipHandler
-from aiogram.filters import Command, Text
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from bot.make_image import make_image
 
 router = Router()
-
 
 TIME = 60
 
@@ -32,13 +27,14 @@ async def start_handler(message: types.Message):
 
 
 # @dp.message_handler(content_types=["new_chat_members"], state='*')
-@router.my_chat_member()
+@router.chat_member()
 async def on_user_join(chat_member: types.ChatMemberUpdated, state: FSMContext):
+    print(chat_member)
+
     bot_id = state.bot.id
     if chat_member.new_chat_member.user.id == bot_id:
         return await state.bot.send_message(
             chat_member.chat.id, "Привіт, дай мені права адміністратора на кік та видалення повідомлень")
-    print(chat_member)
     question, answer = make_question()
     bot_message = await state.bot.send_photo(
         make_image(question, TIME),
@@ -51,7 +47,7 @@ async def on_user_join(chat_member: types.ChatMemberUpdated, state: FSMContext):
         bot_message=bot_message,
         new_member_message=message
     )
-    await Check.check.set()
+    await state.set_state(Check.check)
     await asyncio.sleep(TIME)
 
     data = await state.get_data()
@@ -64,7 +60,7 @@ async def on_user_join(chat_member: types.ChatMemberUpdated, state: FSMContext):
 
 
 # @dp.message_handler(state=Check.check, content_types=types.ContentType.ANY)
-@router.message(state=Check.check)
+# @router.message()
 async def answer_handler(message: types.Message, state: FSMContext):
     data = await state.get_data()
     is_check_passed = message.text and str(data['answer']) in message.text
@@ -86,7 +82,7 @@ async def answer_handler(message: types.Message, state: FSMContext):
 
 
 # @dp.message_handler(state='*')
-@router.message()
+# @router.message()
 async def spam_filter(message: types.Message, state: FSMContext):
     if any(message.text.startswith(i) for i in SPAM_LINKS):
         with suppress(exceptions.TelegramAPIError):
