@@ -1,6 +1,9 @@
 import asyncio
+import io
 import random
+import tempfile
 
+from PIL import Image
 from aiogram import F, Router, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -27,21 +30,30 @@ async def start_handler(message: types.Message):
 
 
 # @dp.message_handler(content_types=["new_chat_members"], state='*')
-@router.chat_member()
-async def on_user_join(chat_member: types.ChatMemberUpdated, state: FSMContext):
-    print(chat_member)
+@router.message(lambda msg: msg.new_chat_members)
+async def on_user_join(message: types.Message, state: FSMContext):
 
     bot_id = state.bot.id
-    if chat_member.new_chat_member.user.id == bot_id:
-        return await state.bot.send_message(
-            chat_member.chat.id, "Привіт, дай мені права адміністратора на кік та видалення повідомлень")
+    if message.new_chat_members[0].id == bot_id:
+        return await message.answer("Привіт, дай мені права адміністратора на кік та видалення повідомлень")
+
     question, answer = make_question()
+    image_bytes = make_image(question, TIME)
+    # image_io = io.BytesIO(image_bytes)
+    # img = Image.open(image_io)
+    # # Створюємо тимчасовий файл
+    # with tempfile.NamedTemporaryFile(suffix=".png") as temp_file:
+    #     img.save(temp_file, format="PNG")
+    #     temp_file.seek(0)
+
     bot_message = await state.bot.send_photo(
-        make_image(question, TIME),
-        caption=f"{chat_member.new_chat_member}, відправте рішення арифметичної задачі,"
+        message.chat.id,
+        photo=types.InputFile(image_bytes),
+        caption=f"@{message.from_user.username}, відправте рішення арифметичної задачі,"
                 " інакше будете додані до чорного списку чату.",
         reply_markup=types.ForceReply(selective=True)
     )
+
     await state.update_data(
         answer=answer,
         bot_message=bot_message,

@@ -2,6 +2,7 @@ from io import BytesIO
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
+from aiogram import types
 
 path = Path(__file__).parent
 base = Image.open(str(path / "template.png")).convert("RGBA")
@@ -29,4 +30,16 @@ def fnt(size):
 
 
 if __name__ == "__main__":
-    _make_image("2+3", 60).show()
+    import io
+
+    image_bytes = make_image("2+3", 60)
+    # Збережіть байти зображення у тимчасовий файл
+    temp_file_path = "temp_image.png"
+    with open(temp_file_path, "wb") as temp_file:
+        temp_file.write(image_bytes)
+    print(temp_file)
+    # Відкрийте тимчасовий файл для передачі його у InputFile
+    with open(temp_file_path, "rb") as temp_file:
+        input_file = types.InputFile(temp_file)
+
+    print(input_file)

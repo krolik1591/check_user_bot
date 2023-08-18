@@ -12,16 +12,16 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 router = Router()
 
 
-@router.my_chat_member(lambda member: member.new_chat_member.status == 'member')
-async def on_user_join(chat_member: types.ChatMemberUpdated, state: FSMContext):
-    bot_id = state.bot.id
-    if chat_member.new_chat_member.user.id == bot_id:
-        inviter_user_id = chat_member.from_user.id
-        admins = config.admin_ids
-        if str(inviter_user_id) not in admins:
-            await state.bot.send_message(chat_member.chat.id, "Тільки адмін може додавати бота!")
-            await state.bot.leave_chat(chat_member.chat.id)
-            return
+# @router.my_chat_member(lambda member: member.new_chat_member.status == 'member')
+# async def on_user_join(chat_member: types.ChatMemberUpdated, state: FSMContext):
+#     bot_id = state.bot.id
+#     if chat_member.new_chat_member.user.id == bot_id:
+#         inviter_user_id = chat_member.from_user.id
+#         admins = config.admin_ids
+#         if str(inviter_user_id) not in admins:
+#             await state.bot.send_message(chat_member.chat.id, "Тільки адмін може додавати бота!")
+#             await state.bot.leave_chat(chat_member.chat.id)
+#             return
 
 
 @router.message(Command("casino"))
