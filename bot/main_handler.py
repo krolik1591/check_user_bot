@@ -10,6 +10,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+from bot.make_image import make_image
+
 router = Router()
 
 
@@ -31,16 +33,16 @@ async def start_handler(message: types.Message):
 
 # @dp.message_handler(content_types=["new_chat_members"], state='*')
 @router.my_chat_member()
-async def new_member_handler(message: types.Message, state: FSMContext):
-    if message.new_chat_members[0] == await state.bot.get_me():
-        return await message.answer("Привіт, дай мені права адміністратора на кік та видалення повідомлень")
-    if message.from_user != message.new_chat_members[0]:
-        return
-
+async def on_user_join(chat_member: types.ChatMemberUpdated, state: FSMContext):
+    bot_id = state.bot.id
+    if chat_member.new_chat_member.user.id == bot_id:
+        return await state.bot.send_message(
+            chat_member.chat.id, "Привіт, дай мені права адміністратора на кік та видалення повідомлень")
+    print(chat_member)
     question, answer = make_question()
-    bot_message = await message.reply_photo(
+    bot_message = await state.bot.send_photo(
         make_image(question, TIME),
-        caption=f"{message.new_chat_members[0].mention}, відправте рішення арифметичної задачі,"
+        caption=f"{chat_member.new_chat_member}, відправте рішення арифметичної задачі,"
                 " інакше будете додані до чорного списку чату.",
         reply_markup=types.ForceReply(selective=True)
     )
@@ -61,7 +63,8 @@ async def new_member_handler(message: types.Message, state: FSMContext):
         await message.delete()
 
 
-@dp.message_handler(state=Check.check, content_types=types.ContentType.ANY)
+# @dp.message_handler(state=Check.check, content_types=types.ContentType.ANY)
+@router.message(state=Check.check)
 async def answer_handler(message: types.Message, state: FSMContext):
     data = await state.get_data()
     is_check_passed = message.text and str(data['answer']) in message.text
@@ -82,7 +85,8 @@ async def answer_handler(message: types.Message, state: FSMContext):
     await state.finish()  # Пользователь ответил, стейт = None
 
 
-@dp.message_handler(state='*')
+# @dp.message_handler(state='*')
+@router.message()
 async def spam_filter(message: types.Message, state: FSMContext):
     if any(message.text.startswith(i) for i in SPAM_LINKS):
         with suppress(exceptions.TelegramAPIError):
