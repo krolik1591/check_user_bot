@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import random
 from time import time
 
@@ -58,17 +59,18 @@ async def chat_member_handler(chat_member: types.ChatMemberUpdated, state: FSMCo
         bot_message=bot_message,
     )
     await state.set_state(Check.check)
-    await asyncio.sleep(TIME)
+    await asyncio.sleep(10)
 
     data = await state.get_data()
     if data['bot_message'] == bot_message:  # Если пользователь не ответил то data еще не очищен
-        await kick_user(state, chat_member.chat.id, new_user_id, chat_member.new_chat_member.user.username)  # и bot_message-ы совпадают.   в таком случае кикаем
+        await kick_user(state, chat_member.chat.id, new_user_id)  # и bot_message-ы совпадают.   в таком случае кикаем
         await state.set_state(None)  # и очищаем data и state
 
     status = 'passed' if data['bot_message'] != bot_message else 'failed'
-    print(status)
+
+    time_ = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     with open('stats.csv', 'a') as file:
-        file.write(f'{chat_member.new_chat_member.user.id},{chat_member.new_chat_member.user.username},{time()},{status}\n')
+        file.write(f'{chat_member.new_chat_member.user.id},{chat_member.new_chat_member.user.username},{time_},{status}\n')
 
 
 @router.message(StateFilter(Check.check))
@@ -77,7 +79,7 @@ async def answer_handler(message: types.Message, state: FSMContext):
     is_check_passed = message.text and str(data['answer']) in message.text
 
     if not is_check_passed:
-        await kick_user(state, message.chat.id, message.from_user.id, message.from_user.username)
+        await kick_user(state, message.chat.id, message.from_user.id)
     else:
         await state.update_data(bot_message=None)
 
@@ -104,7 +106,7 @@ def make_question():
     return question, answer
 
 
-async def kick_user(state, chat_id, user_id, username):
+async def kick_user(state, chat_id, user_id):
     try:
         await state.bot.ban_chat_member(chat_id, user_id, until_date=int(time()) + 35) # бан на 35 сек. <30 = inf
         await state.bot.unban_chat_member(chat_id, user_id)
