@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-import os
 import random
 from time import time
 
@@ -95,8 +94,8 @@ async def answer_handler(message: types.Message, state: FSMContext):
 async def admin_stats_handler(message: types.Message, state: FSMContext):
     if message.from_user.id not in ADMINS:
         return
-    current_directory = os.path.dirname(os.path.abspath(__file__))
-    file = types.FSInputFile(path=current_directory, filename='stats.csv')
+
+    file = types.FSInputFile(path='stats.csv', filename='stats.csv')
 
     await state.bot.send_document(message.from_user.id, file)
 
