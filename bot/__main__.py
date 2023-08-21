@@ -1,10 +1,10 @@
 import asyncio
 import logging
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, types
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from bot.handlers import routers
+from bot.main_handler import router as main_router
 
 
 async def main(bot):
@@ -14,14 +14,21 @@ async def main(bot):
 
     dp = Dispatcher(storage=storage)
 
-    for router in routers:
-        dp.include_router(router)
+    dp.include_router(main_router)
+
+    await set_private_commands(bot)
 
     try:
         print("me:", await bot.me())
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     finally:
         await bot.session.close()
+
+
+async def set_private_commands(bot: Bot):
+    await bot.set_my_commands(commands=[
+        types.BotCommand(command="admin_stats", description="Адмін статистика"),
+    ], scope=types.BotCommandScopeAllPrivateChats())
 
 
 if __name__ == '__main__':

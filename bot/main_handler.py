@@ -1,11 +1,7 @@
 import asyncio
-import io
 import random
-import tempfile
-from contextlib import suppress
 from time import time
 
-from PIL import Image
 from aiogram import F, Router, exceptions, types
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -65,9 +61,14 @@ async def chat_member_handler(chat_member: types.ChatMemberUpdated, state: FSMCo
     await asyncio.sleep(TIME)
 
     data = await state.get_data()
-    if data and data['bot_message'] == bot_message:  # Если пользователь не ответил то data еще не очищен
+    if data['bot_message'] == bot_message:  # Если пользователь не ответил то data еще не очищен
         await kick_user(state, chat_member.chat.id, new_user_id, chat_member.new_chat_member.user.username)  # и bot_message-ы совпадают.   в таком случае кикаем
         await state.set_state(None)  # и очищаем data и state
+
+    status = 'passed' if data['bot_message'] != bot_message else 'failed'
+    print(status)
+    with open('stats.csv', 'a') as file:
+        file.write(f'{chat_member.new_chat_member.user.id},{chat_member.new_chat_member.user.username},{time()},{status}\n')
 
 
 @router.message(StateFilter(Check.check))
@@ -77,12 +78,23 @@ async def answer_handler(message: types.Message, state: FSMContext):
 
     if not is_check_passed:
         await kick_user(state, message.chat.id, message.from_user.id, message.from_user.username)
+    else:
+        await state.update_data(bot_message=None)
 
     bot_message = data['bot_message']
     await state.bot.delete_message(bot_message.chat.id, bot_message.message_id)
     await message.delete()
-    await state.update_data(bot_message=None)
     await state.set_state(None)
+
+
+@router.message(F.chat.type == "private", Command('admin_stats'))
+async def admin_stats_handler(message: types.Message, state: FSMContext):
+    if message.from_user.id not in ADMINS:
+        return
+
+    file = types.FSInputFile(path='stats.csv', filename='stats.csv')
+
+    await state.bot.send_document(message.from_user.id, file)
 
 
 def make_question():
