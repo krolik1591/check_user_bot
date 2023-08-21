@@ -32,7 +32,7 @@ async def set_private_commands(bot: Bot):
 
 
 if __name__ == '__main__':
-    TOKEN = '6060413264:AAHQifp8CbsQI6kXcQ2MdFN9cgZQQeFqw0c'
+    TOKEN = '6662611233:AAELYOueyIWTHj-v6f-c1LvRtMHaO_xZ79k'
 
     loop = asyncio.get_event_loop()
 
