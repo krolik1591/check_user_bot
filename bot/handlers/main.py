@@ -16,6 +16,7 @@ from bot.make_image import make_image
 router = Router()
 
 TIME = 60
+ADMINS = [6193913287, 357108179]
 
 
 class Check(StatesGroup):
@@ -26,6 +27,16 @@ class Check(StatesGroup):
 async def start_handler(message: types.Message):
     await message.answer("Привіт. Я - бот для захисту твоїх чатів від спамерів. \n"
                          "Додай мене до чату і дай права адміністратора на кік та видалення повідомлень.")
+
+
+@router.my_chat_member(lambda member: member.new_chat_member.status == 'member')
+async def on_bot_join(chat_member: types.ChatMemberUpdated, state: FSMContext):
+    bot_id = state.bot.id
+    if chat_member.new_chat_member.user.id == bot_id:
+        inviter_user_id = chat_member.from_user.id
+        if inviter_user_id not in ADMINS:
+            await state.bot.leave_chat(chat_member.chat.id)
+            return
 
 
 @router.chat_member(lambda member: member.new_chat_member.status == 'member')
