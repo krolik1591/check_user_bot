@@ -28,6 +28,7 @@ async def start_handler(message: types.Message):
 
 @router.my_chat_member(lambda member: member.new_chat_member.status == 'member')
 async def on_bot_join(chat_member: types.ChatMemberUpdated, state: FSMContext):
+    print('add_bot_to_chat')
     bot_id = state.bot.id
     if chat_member.new_chat_member.user.id == bot_id:
         inviter_user_id = chat_member.from_user.id
@@ -35,13 +36,13 @@ async def on_bot_join(chat_member: types.ChatMemberUpdated, state: FSMContext):
             await state.bot.leave_chat(chat_member.chat.id)
             return
 
+        return await state.bot.send_message(chat_member.chat.id, "Привіт, дай мені права адміністратора на кік та видалення повідомлень")
+
 
 @router.chat_member(lambda member: member.new_chat_member.status == 'member')
 async def chat_member_handler(chat_member: types.ChatMemberUpdated, state: FSMContext):
-    bot_id = state.bot.id
+    print('new_member_in_chat')
     new_user_id = chat_member.new_chat_member.user.id
-    if new_user_id == bot_id:
-        return await state.bot.send_message(chat_member.chat.id, "Привіт, дай мені права адміністратора на кік та видалення повідомлень")
 
     question, answer = make_question()
     image_bytes = make_image(question, TIME)
