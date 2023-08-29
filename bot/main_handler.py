@@ -61,8 +61,9 @@ async def chat_member_handler(chat_member: types.ChatMemberUpdated, state: FSMCo
         bot_message=bot_message,
     )
     await state.set_state(Check.check)
-    await asyncio.sleep(10)
+    await asyncio.sleep(TIME)
 
+    await bot_message.delete()
     data = await state.get_data()
     if data['bot_message'] == bot_message:  # Если пользователь не ответил то data еще не очищен
         await kick_user(state, chat_member.chat.id, new_user_id)  # и bot_message-ы совпадают.   в таком случае кикаем
